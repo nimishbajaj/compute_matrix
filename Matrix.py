@@ -41,6 +41,8 @@ def find_distance(source_id: int, destination_id: int, distance_matrix: DataFram
         .filter(F.col("source." + id_column) == source_id) \
         .filter(F.col("destination." + id_column) == destination_id)
 
+def find_distances_range(range_start: int, range_end: int, distance_matrix: DataFrame):
+    return distance_matrix.filter((F.col("source."+id_column)>=range_start) & (F.col("source."+id_column)<=range_end))
 
 if __name__ == "__main__":
     start = time.time()
@@ -50,7 +52,7 @@ if __name__ == "__main__":
     id_column = "id"
 
     # generate dataset with random values for testing the script
-    sparkDF: DataFrame = generate_spark_matrix(100, 1, spark)
+    sparkDF: DataFrame = generate_spark_matrix(nrows=1000, ncols=5, spark=spark)
     sparkDF = sparkDF.withColumn(id_column, monotonically_increasing_id())
 
     # Define the UDF to compute the distance between vectors
@@ -65,5 +67,8 @@ if __name__ == "__main__":
     # API3 - Find distance between two ids
     find_distance(1, 2, distance_matrix).show()
 
+    # API 4 - Find distances for a range of start nodes
+    find_distances_range(1,10, distance_matrix).show()
+
     end = time.time()
-    print("Time elapsed:", end - start, "seconds")
+    print("Time elapsed: ", end - start, "seconds")
