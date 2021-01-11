@@ -20,7 +20,7 @@ def compute_distance_matrix(df: DataFrame, id_column: str, distance_udf: F.udf):
     source_vectorized = assembler.transform(df).select(id_column, assembler.getOutputCol()).alias("source")
     destination_vectorized = assembler.transform(df).select(id_column, assembler.getOutputCol()).alias("destination")
 
-    cross_df = source_vectorized.crossJoin(destination_vectorized)
+    cross_df = F.broadcast(source_vectorized).crossJoin(F.broadcast(destination_vectorized))
     return cross_df \
         .withColumn("distance", distance_udf(F.col("source." + assembler.getOutputCol()),
                                              F.col("destination." + assembler.getOutputCol()))) \
@@ -59,9 +59,9 @@ if __name__ == "__main__":
     partition_factor = 200
 
     # generate dataset with random values for testing the script
-    nrows=1000
+    nrows=10000
     sparkDF: DataFrame = generate_spark_matrix(nrows=nrows, ncols=5, spark=spark)
-    sparkDF.repartition(int(nrows/partition_factor))
+    sparkDF.repartition()
     sparkDF = sparkDF.withColumn(id_column, monotonically_increasing_id())
 
 
